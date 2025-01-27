@@ -29,4 +29,8 @@ project Mars_Rover is
       for Artifacts (".") use ("share");
    end Install;
 
+   package Prove is
+      for Proof_Switches ("Ada") use ("--no-subprojects", "--level=1");
+   end Prove;
+
 end Mars_Rover;
