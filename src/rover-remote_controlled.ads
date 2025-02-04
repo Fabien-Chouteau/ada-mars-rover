@@ -1,5 +1,10 @@
-package Rover.Remote_Controlled is
+with Rover_HAL;
 
-   procedure Run;
+package Rover.Remote_Controlled
+with SPARK_Mode
+is
+
+   procedure Run
+     with Pre => Rover_HAL.Initialized;
 
 end Rover.Remote_Controlled;

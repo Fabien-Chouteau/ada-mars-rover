@@ -2,7 +2,7 @@ with RP.GPIO;
 with RP.Device;
 with RP.I2C_Master;
 
-package body Rover.I2C is
+package body Rover_HAL.I2C is
 
    I2C_SDA  : RP.GPIO.GPIO_Point := (Pin => 0);
    I2C_SCL  : RP.GPIO.GPIO_Point := (Pin => 1);
@@ -57,6 +57,4 @@ package body Rover.I2C is
         (Addr, Mem_Addr, Mem_Addr_Size, Data, Status, Timeout);
    end Mem_Read;
 
-begin
-   Initialize;
-end Rover.I2C;
+end Rover_HAL.I2C;

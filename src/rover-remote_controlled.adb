@@ -1,11 +1,8 @@
-with RP.Timer; use RP.Timer;
-with RP.Device;
+with Rover_HAL; use Rover_HAL;
 
-with Rover.Remote;
-with Rover.Driving; use Rover.Driving;
-with Rover.Sonar;
-
-package body Rover.Remote_Controlled is
+package body Rover.Remote_Controlled
+with SPARK_Mode => Off
+is
 
    type Remote_Command is (None,
                            Forward,
@@ -21,10 +18,9 @@ package body Rover.Remote_Controlled is
    -- To_Command --
    ----------------
 
-   function To_Command (Buttons : Rover.Remote.Buttons_State)
+   function To_Command (Buttons : Buttons_State)
                         return Remote_Command
    is
-      use Rover.Remote;
    begin
       if Buttons (Up) and then Buttons (Left) then
          return Forward_Left;
@@ -52,7 +48,7 @@ package body Rover.Remote_Controlled is
    ---------
 
    procedure Run is
-      Buttons : Rover.Remote.Buttons_State;
+      Buttons : Buttons_State;
       Dist : Natural;
 
       Cmd, Last_Cmd : Remote_Command := None;
@@ -62,8 +58,8 @@ package body Rover.Remote_Controlled is
    begin
 
       while Last_Interaction_Time < Clock + Timeout loop
-         Buttons := Rover.Remote.Update;
-         Dist := Rover.Sonar.Distance;
+         Buttons := Update;
+         Dist := Sonar_Distance;
          Last_Cmd := Cmd;
 
          if (for some B of Buttons => B) then
@@ -72,7 +68,7 @@ package body Rover.Remote_Controlled is
 
          if Dist < 20 then
             --  Ignore forward commands when close to an obstacle
-            Buttons (Rover.Remote.Up) := False;
+            Buttons (Up) := False;
          end if;
 
          Cmd := To_Command (Buttons);
@@ -81,44 +77,44 @@ package body Rover.Remote_Controlled is
 
             case Cmd is
             when None =>
-               Rover.Driving.Set_Power (Left, 0);
-               Rover.Driving.Set_Power (Right, 0);
+               Set_Power (Left, 0);
+               Set_Power (Right, 0);
             when Forward =>
-               Rover.Driving.Set_Turn (Straight);
-               Rover.Driving.Set_Power (Left, 100);
-               Rover.Driving.Set_Power (Right, 100);
+               Set_Turn (Straight);
+               Set_Power (Left, 100);
+               Set_Power (Right, 100);
             when Backward =>
-               Rover.Driving.Set_Turn (Straight);
-               Rover.Driving.Set_Power (Left, -100);
-               Rover.Driving.Set_Power (Right, -100);
+               Set_Turn (Straight);
+               Set_Power (Left, -100);
+               Set_Power (Right, -100);
             when Turn_Left =>
-               Rover.Driving.Set_Turn (Around);
-               Rover.Driving.Set_Power (Left, -100);
-               Rover.Driving.Set_Power (Right, 100);
+               Set_Turn (Around);
+               Set_Power (Left, -100);
+               Set_Power (Right, 100);
             when Turn_Right =>
-               Rover.Driving.Set_Turn (Around);
-               Rover.Driving.Set_Power (Left, 100);
-               Rover.Driving.Set_Power (Right, -100);
+               Set_Turn (Around);
+               Set_Power (Left, 100);
+               Set_Power (Right, -100);
             when Forward_Left =>
-               Rover.Driving.Set_Turn (Left);
-               Rover.Driving.Set_Power (Left, 50);
-               Rover.Driving.Set_Power (Right, 100);
+               Set_Turn (Left);
+               Set_Power (Left, 50);
+               Set_Power (Right, 100);
             when Forward_Right =>
-               Rover.Driving.Set_Turn (Right);
-               Rover.Driving.Set_Power (Left, 100);
-               Rover.Driving.Set_Power (Right, 50);
+               Set_Turn (Right);
+               Set_Power (Left, 100);
+               Set_Power (Right, 50);
             when Back_Left =>
-               Rover.Driving.Set_Turn (Right);
-               Rover.Driving.Set_Power (Left, -100);
-               Rover.Driving.Set_Power (Right, -50);
+               Set_Turn (Right);
+               Set_Power (Left, -100);
+               Set_Power (Right, -50);
             when Back_Right =>
-               Rover.Driving.Set_Turn (Left);
-               Rover.Driving.Set_Power (Left, -50);
-               Rover.Driving.Set_Power (Right, -100);
+               Set_Turn (Left);
+               Set_Power (Left, -50);
+               Set_Power (Right, -100);
             end case;
          end if;
 
-         RP.Device.Timer.Delay_Milliseconds (30);
+         Delay_Milliseconds (30);
       end loop;
    end Run;
 

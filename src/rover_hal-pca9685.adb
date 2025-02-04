@@ -1,9 +1,8 @@
 with HAL; use HAL;
-with HAL.I2C;
-with Rover.I2C; use Rover.I2C;
-with RP.Device;
+with HAL.I2C; use HAL.I2C;
+with Rover_HAL.I2C; use Rover_HAL.I2C;
 
-package body Rover.Servos is
+package body Rover_HAL.PCA9685 is
 
    PCA9685_Addr : constant := 16#40# * 2;
 
@@ -34,15 +33,11 @@ package body Rover.Servos is
    --  MODE2_OUTNE_HIGHZ  : constant := 16#02#;
    --  MODE2_OCH_ONACK    : constant := 16#08#;
 
-   type Channel_Id is range 0 .. 15;
-   type PWM_Range is range 0 .. 4096;
-
    --------------------
    -- Write_Register --
    --------------------
 
-   procedure Write_Register (Reg, Val : UInt8) is
-      use HAL.I2C;
+   procedure Write_Register (Reg, Val : HAL.UInt8) is
 
       Status : HAL.I2C.I2C_Status;
 
@@ -65,8 +60,6 @@ package body Rover.Servos is
    -------------
 
    procedure Set_PWM (Chan : Channel_Id; PWM : PWM_Range) is
-      use HAL.I2C;
-
       Reg : constant UInt8 := PCA9685_LED0_REG + UInt8 (Chan) * 4;
       Phase_Begin : constant UInt16 := 0;
       Phase_End   : constant UInt16 := UInt16 (PWM);
@@ -110,7 +103,7 @@ package body Rover.Servos is
       Write_Register (PCA9685_PRESCALE_REG, UInt8 (Prescaler));
 
       Write_Register (PCA9685_MODE1_REG, 0); -- Not Sleep
-      RP.Device.Timer.Delay_Milliseconds (500);
+      Rover_HAL.Delay_Milliseconds (500);
    end Set_Frequency;
 
    ----------------
@@ -123,49 +116,4 @@ package body Rover.Servos is
       Write_Register (PCA9685_MODE1_REG, MODE1_RESTART or MODE1_AUTOINC);
    end Initialize;
 
-   ---------------
-   -- Set_Wheel --
-   ---------------
-
-   procedure Set_Wheel (Wheel : Steering_Wheel_Id;
-                        Side  : Side_Id;
-                        V     : Integer)
-   is
-   begin
-      case Side is
-         when Left =>
-            case Wheel is
-               when Front =>
-                  Set_PWM (9, PWM_Range (V));
-               when Back =>
-                  Set_PWM (11, PWM_Range (V));
-            end case;
-
-         when Right =>
-            case Wheel is
-               when Front =>
-                  Set_PWM (15, PWM_Range (V));
-               when Back =>
-                  Set_PWM (13, PWM_Range (V));
-            end case;
-      end case;
-   end Set_Wheel;
-
-   --------------
-   -- Set_Mast --
-   --------------
-
-   procedure Set_Mast (V : Mast_Angle) is
-      Center     : constant := 327.0;
-      Side_Range : constant := 200.0;
-      Move_Step  : constant := Side_Range / 90.0;
-
-      Offset : constant Integer := Integer (-Float (V) * Move_Step);
-      Pos : constant PWM_Range := PWM_Range (Integer (Center) + Offset);
-   begin
-      Set_PWM (0, Pos);
-   end Set_Mast;
-
-begin
-   Initialize;
-end Rover.Servos;
+end Rover_HAL.PCA9685;

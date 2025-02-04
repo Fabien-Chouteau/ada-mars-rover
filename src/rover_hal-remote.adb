@@ -3,7 +3,7 @@ with RP.GPIO; use RP.GPIO;
 with Pico;
 with RP.Timer;
 
-package body Rover.Remote is
+package body Rover_HAL.Remote is
 
    CLK  : GPIO_Point renames Pico.GP18;
    Data : GPIO_Point renames Pico.GP19;
@@ -170,15 +170,22 @@ package body Rover.Remote is
       return Result;
    end Update;
 
-begin
-   CLK.Configure (Output, Pull_Up);
-   Cmd.Configure (Output, Pull_Down);
-   CS.Configure (Output, Pull_Up);
+   ----------------
+   -- Initialize --
+   ----------------
 
-   Data.Configure (Input, Floating);
-   Ack.Configure (Input, Floating);
+   procedure Initialize is
+   begin
+      CLK.Configure (Output, Pull_Up);
+      Cmd.Configure (Output, Pull_Down);
+      CS.Configure (Output, Pull_Up);
 
-   CLK.Set;
-   Cmd.Clear;
-   CS.Set;
-end Rover.Remote;
+      Data.Configure (Input, Floating);
+      Ack.Configure (Input, Floating);
+
+      CLK.Set;
+      Cmd.Clear;
+      CS.Set;
+   end Initialize;
+
+end Rover_HAL.Remote;

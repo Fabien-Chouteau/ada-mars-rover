@@ -1,84 +1,82 @@
-with RP.Timer; use RP.Timer;
-with RP.Device;
+with Rover_HAL; use Rover_HAL;
 
-with Rover.Driving; use Rover.Driving;
-with Rover.Remote;
-with Rover.Sonar;
-with Rover.Servos; use Rover.Servos;
-
-package body Rover.Autonomous is
-
-   User_Exit : Boolean := False;
+package body Rover.Autonomous
+with SPARK_Mode => Off
+is
 
    type Mast_Direction is (Left, None, Right);
 
-   Pos : Servos.Mast_Angle := 0;
-   Direction : Mast_Direction := Left;
-   Last_Mast_Update : Time := 0;
+   type Auto_State is record
+      User_Exit : Boolean := False;
+      Pos : Mast_Angle := 0;
+      Direction : Mast_Direction := Left;
+      Last_Mast_Update : Time := 0;
+   end record;
 
    -------------------
    -- Next_Mast_Pos --
    -------------------
 
-   procedure Next_Mast_Pos (Min, Max : Servos.Mast_Angle;
+   procedure Next_Mast_Pos (This : in out Auto_State;
+                            Min, Max : Mast_Angle;
                             Period : Time)
    is
       Now : constant Time := Clock;
    begin
-      if Now < Last_Mast_Update + Period then
+      if Now < This.Last_Mast_Update + Period then
          return;
       end if;
 
-      case Direction is
+      case This.Direction is
          when None =>
             null;
          when Left =>
-            if Pos <= Min then
-               Direction := Right;
+            if This.Pos <= Min then
+               This.Direction := Right;
             else
-               Pos := Pos - 1;
+               This.Pos := This.Pos - 1;
             end if;
          when Right =>
-            if Pos >= Max then
-               Direction := Left;
+            if This.Pos >= Max then
+               This.Direction := Left;
             else
-               Pos := Pos + 1;
+               This.Pos := This.Pos + 1;
             end if;
       end case;
 
-      Servos.Set_Mast (Pos);
-      Last_Mast_Update := Now;
+      Set_Mast_Angle (This.Pos);
+      This.Last_Mast_Update := Now;
    end Next_Mast_Pos;
 
    ----------------------
    -- Check_User_Input --
    ----------------------
 
-   function Check_User_Input return Boolean is
-      State : constant Remote.Buttons_State := Remote.Update;
+   function Check_User_Input (This : in out Auto_State) return Boolean is
+      State : constant Buttons_State := Update;
    begin
-      User_Exit := (for some B in Remote.Buttons => State (B));
-      return User_Exit;
+      This.User_Exit := (for some B in Buttons => State (B));
+      return This.User_Exit;
    end Check_User_Input;
 
    ----------------
    -- Go_Forward --
    ----------------
 
-   procedure Go_Forward is
+   procedure Go_Forward (This : in out Auto_State) is
    begin
 
       --  Go forward...
-      Driving.Set_Turn (Driving.Straight);
-      Driving.Set_Power (Left, 100);
-      Driving.Set_Power (Right, 100);
+      Set_Turn (Straight);
+      Set_Power (Left, 100);
+      Set_Power (Right, 100);
 
       --  Rotate the mast and check for obstacle
-      while not Check_User_Input loop
-         Next_Mast_Pos (-45, 45, Milliseconds (10));
+      while not Check_User_Input (This) loop
+         Next_Mast_Pos (This, -45, 45, Milliseconds (10));
 
-         exit when Sonar.Distance < 30;
-         RP.Device.Timer.Delay_Milliseconds (10);
+         exit when Sonar_Distance < 30;
+         Delay_Milliseconds (10);
       end loop;
    end Go_Forward;
 
@@ -91,39 +89,39 @@ package body Rover.Autonomous is
       --  Turn around, full speed
       --  TODO: Ramdom direction, keep turning if an obstacle is detected
 
-      Driving.Set_Turn (Driving.Around);
-      Driving.Set_Power (Left, -100);
-      Driving.Set_Power (Right, 100);
-      RP.Device.Timer.Delay_Milliseconds (2000);
+      Set_Turn (Around);
+      Set_Power (Left, -100);
+      Set_Power (Right, 100);
+      Delay_Milliseconds (2000);
    end Turn_Around;
 
    ------------------------
    -- Find_New_Direction --
    ------------------------
 
-   procedure Find_New_Direction is
+   procedure Find_New_Direction (This : in out Auto_State) is
       Left_Dist : Natural;
       Right_Dist : Natural;
 
       Timeout : constant Time := Clock + Milliseconds (8000);
    begin
-      Driving.Set_Turn (Driving.Straight);
-      Driving.Set_Power (Left, 0);
-      Driving.Set_Power (Right, 0);
+      Set_Turn (Straight);
+      Set_Power (Left, 0);
+      Set_Power (Right, 0);
 
       --  Turn the mast back and forth and log the dected distance for the left
       --  and right side.
-      while not Check_User_Input and then Clock < Timeout loop
-         Next_Mast_Pos (-55, 55, Milliseconds (20));
+      while not Check_User_Input (This) and then Clock < Timeout loop
+         Next_Mast_Pos (This, -55, 55, Milliseconds (20));
 
-         if Pos <= -40 then
-            Left_Dist := Sonar.Distance;
+         if This.Pos <= -40 then
+            Left_Dist := Sonar_Distance;
          end if;
-         if Pos >= 40 then
-            Right_Dist := Sonar.Distance;
+         if This.Pos >= 40 then
+            Right_Dist := Sonar_Distance;
          end if;
 
-         RP.Device.Timer.Delay_Milliseconds (10);
+         Delay_Milliseconds (10);
       end loop;
 
       if Clock > Timeout then
@@ -133,16 +131,16 @@ package body Rover.Autonomous is
 
          elsif Left_Dist > Right_Dist then
             --  Turn left a little
-            Driving.Set_Turn (Driving.Around);
-            Driving.Set_Power (Left, -100);
-            Driving.Set_Power (Right, 100);
-            RP.Device.Timer.Delay_Milliseconds (800);
+            Set_Turn (Around);
+            Set_Power (Left, -100);
+            Set_Power (Right, 100);
+            Delay_Milliseconds (800);
          else
             --  Turn right a little
-            Driving.Set_Turn (Driving.Around);
-            Driving.Set_Power (Left, 100);
-            Driving.Set_Power (Right, -100);
-            RP.Device.Timer.Delay_Milliseconds (800);
+            Set_Turn (Around);
+            Set_Power (Left, 100);
+            Set_Power (Right, -100);
+            Delay_Milliseconds (800);
          end if;
       end if;
 
@@ -153,24 +151,23 @@ package body Rover.Autonomous is
    ---------
 
    procedure Run is
+      State : Auto_State;
    begin
 
-      User_Exit := False;
-
       --  Stop everything
-      Driving.Set_Turn (Driving.Straight);
-      Driving.Set_Power (Left, 0);
-      Driving.Set_Power (Right, 0);
+      Set_Turn (Straight);
+      Set_Power (Left, 0);
+      Set_Power (Right, 0);
 
-      while not User_Exit loop
-         Go_Forward;
-         Find_New_Direction;
+      while not State.User_Exit loop
+         Go_Forward (State);
+         Find_New_Direction (State);
       end loop;
 
       --  Stop everything before leaving the autonomous mode
-      Driving.Set_Turn (Driving.Straight);
-      Driving.Set_Power (Left, 0);
-      Driving.Set_Power (Right, 0);
+      Set_Turn (Straight);
+      Set_Power (Left, 0);
+      Set_Power (Right, 0);
 
    end Run;
 

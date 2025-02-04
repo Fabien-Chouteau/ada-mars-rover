@@ -1,6 +1,6 @@
 with HAL.I2C;
 
-package Rover.I2C is
+private package Rover_HAL.I2C is
 
    procedure Mem_Write
      (Addr          : HAL.I2C.I2C_Address;
@@ -18,4 +18,6 @@ package Rover.I2C is
       Status        : out HAL.I2C.I2C_Status;
       Timeout       : Natural := 1000);
 
-end Rover.I2C;
+   procedure Initialize;
+
+end Rover_HAL.I2C;

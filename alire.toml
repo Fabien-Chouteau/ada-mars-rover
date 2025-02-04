@@ -13,7 +13,10 @@ executables = ["mars_rover"]
 
 [[depends-on]]
 pico_bsp = "*"
-rp2040_hal = "=2.3"
+rp2040_hal = "~2.4.1"
 
 [build-switches]
 "*".ada_version = "ada2022"
+
+[[pins]]
+usb_embedded = {url = "https://github.com/Fabien-Chouteau/usb_embedded/", branch = "release/1.0" }

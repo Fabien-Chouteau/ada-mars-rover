@@ -1,8 +1,16 @@
 with Rover.Autonomous;
 with Rover.Remote_Controlled;
 
-procedure Mars_Rover is
+with Rover_HAL;
+
+procedure Mars_Rover
+  with SPARK_Mode
+is
 begin
+
+   Rover_HAL.Initialize;
+
+   Rover_HAL.Set_Power (Rover_HAL.Left, 100);
 
    --  Alternate between autonomous and remote controlled mode. Automous will
    --  run until a command is received from the remote, remote controlled will
