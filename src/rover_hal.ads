@@ -2,8 +2,11 @@ with Interfaces; use Interfaces;
 
 package Rover_HAL
 with
-  Abstract_State => (HW_Init, (HW_State with Synchronous)),
-  Initializes    => (HW_State),
+  Abstract_State => (HW_Init,
+                     (HW_State with Synchronous),
+                     Power_State,
+                     Turn_State),
+  Initializes    => (HW_State, Power_State, Turn_State),
   SPARK_Mode,
   Always_Terminates
 is
@@ -51,10 +54,20 @@ is
 
    function Sonar_Distance return Unsigned_32
      with
-       Pre => Initialized,
+       Pre    => Initialized,
+       Post   => Get_Sonar_Distance = Sonar_Distance'Result,
        Global => (HW_State, HW_Init),
        Side_Effects,
        Volatile_Function;
+
+   function Get_Sonar_Distance return Unsigned_32
+     with
+      Pre    => Initialized,
+      GLobal => (HW_Init),
+      Ghost,
+      Import;
+   --  Return the value of the last Sonar Distance obtained by calling
+   --  `Sonar_Distance`.
 
    ----------
    -- Mast --
@@ -126,16 +139,43 @@ is
    procedure Set_Turn (Turn : Turn_Kind)
      with
        Pre  => Initialized,
-       Post => Initialized,
-       Global => (HW_State, HW_Init);
+       Post => Initialized and then
+               Get_Turn = Turn,
+       Global => (Input  => (HW_State, HW_Init),
+                  In_Out => Turn_State);
+
+   function Get_Turn return Turn_Kind
+     with
+       Pre => Initialized,
+       Global => (HW_Init, Turn_State),
+       Ghost,
+       Import;
+   --  Return the value set in the last call to `Set_Turn`.
 
    type Motor_Power is new Interfaces.Integer_8 range -100 .. 100;
 
+   pragma Unevaluated_Use_Of_Old (Allow);
    procedure Set_Power (Side : Side_Id;
                         Pwr  : Motor_Power)
      with
        Pre  => Initialized,
-       Post => Initialized,
-       Global => (HW_State, HW_Init);
+       Post => Initialized and then
+               Get_Power (Side) = Pwr and then
+
+               (if Side = Left then
+                  Get_Power (Right) = Get_Power (Right)'Old
+                else
+                  Get_Power (Left) = Get_Power (Left)'Old),
+       Global => (Input  => (HW_State, HW_Init),
+                  In_Out => Power_State);
+   pragma Unevaluated_Use_Of_Old (Error);
+
+   function Get_Power (Side : Side_Id) return Motor_Power
+     with
+       Pre => Initialized,
+       Global => (HW_Init, Power_State),
+       Ghost,
+       Import;
+   --  Return the value set in the last call to `Set_Power`.
 
 end Rover_HAL;

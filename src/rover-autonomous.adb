@@ -21,6 +21,9 @@ is
    procedure Next_Mast_Pos (This : in out Auto_State;
                             Min, Max : Mast_Angle;
                             Period : Time)
+   with
+     Pre  => Initialized,
+     Post => Initialized
    is
       Now : constant Time := Clock;
    begin
@@ -53,7 +56,11 @@ is
    -- Check_User_Input --
    ----------------------
 
-   procedure Check_User_Input (This : in out Auto_State) is
+   procedure Check_User_Input (This : in out Auto_State)
+   with
+     Pre  => Initialized,
+     Post => Initialized
+   is
       State : Buttons_State;
    begin
       State := Update;
@@ -64,7 +71,11 @@ is
    -- Go_Forward --
    ----------------
 
-   procedure Go_Forward (This : in out Auto_State) is
+   procedure Go_Forward (This : in out Auto_State) with
+     Pre  => Initialized and then
+             Rover.Cannot_Crash,
+     Post => Initialized
+   is
       Distance : Unsigned_32;
    begin
 
@@ -94,7 +105,12 @@ is
    -- Turn_Around --
    -----------------
 
-   procedure Turn_Around is
+   procedure Turn_Around
+   with
+     Pre  => Initialized,
+     Post => Initialized and then
+             Rover.Cannot_Crash
+   is
    begin
       --  Turn around, full speed
       --  TODO: Ramdom direction, keep turning if an obstacle is detected
@@ -109,7 +125,12 @@ is
    -- Find_New_Direction --
    ------------------------
 
-   procedure Find_New_Direction (This : in out Auto_State) is
+   procedure Find_New_Direction (This : in out Auto_State)
+     with
+      Pre  => Initialized,
+      Post => Initialized and then
+              Rover.Cannot_Crash
+   is
       Left_Dist : Unsigned_32 := 0;
       Right_Dist : Unsigned_32 := 0;
 
@@ -181,6 +202,8 @@ is
       while not State.User_Exit loop
          Go_Forward (State);
          Find_New_Direction (State);
+
+         pragma Loop_Invariant (Rover.Cannot_Crash);
       end loop;
 
       --  Stop everything before leaving the autonomous mode

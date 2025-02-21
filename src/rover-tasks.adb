@@ -1,4 +1,3 @@
-with Rover_HAL;
 with Rover.Autonomous;
 with Rover.Remote_Controlled;
 
@@ -20,6 +19,8 @@ is
       loop
          Rover.Autonomous.Run;
          Rover.Remote_Controlled.Run;
+
+         pragma Loop_Invariant (Rover.Cannot_Crash);
       end loop;
    end Demo;
 

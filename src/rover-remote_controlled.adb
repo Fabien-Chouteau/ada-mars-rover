@@ -52,7 +52,8 @@ is
       Buttons : Buttons_State;
       Dist : Unsigned_32;
 
-      Cmd, Last_Cmd : Remote_Command := None;
+      Cmd : Remote_Command := None;
+      Last_Cmd : Remote_Command;
 
       Now : Time;
       Last_Interaction_Time : Time;
@@ -66,15 +67,16 @@ is
 
          exit when Last_Interaction_Time + Timeout > Now;
 
-         Buttons := Update;
-         Dist := Sonar_Distance;
+         Buttons  := Update;
          Last_Cmd := Cmd;
+
+         Dist                      := Sonar_Distance;
 
          if (for some B of Buttons => B) then
             Last_Interaction_Time := Clock;
          end if;
 
-         if Dist < 20 then
+         if Dist < Rover.Safety_Distance then
             --  Ignore forward commands when close to an obstacle
             Buttons (Up) := False;
          end if;
@@ -123,6 +125,8 @@ is
          end if;
 
          Delay_Milliseconds (30);
+
+         pragma Loop_Invariant (Rover.Cannot_Crash);
       end loop;
    end Run;
 
