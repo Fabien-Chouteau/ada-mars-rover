@@ -3,7 +3,7 @@ with Pico;
 
 package body Rover_HAL.Sonar is
 
-   Pin  : GPIO_Point renames Pico.GP3;
+   Pin  : GPIO_Point renames Pico.GP6;
 
    Timeout : constant Time := Ticks_Per_Second / 1_000 * 50;
 
