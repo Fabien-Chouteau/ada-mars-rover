@@ -73,6 +73,8 @@ is
       Timeout : constant Time := Milliseconds (10_000);
    begin
 
+      Set_Mast_Angle (0);
+
       Last_Interaction_Time := Clock;
 
       loop

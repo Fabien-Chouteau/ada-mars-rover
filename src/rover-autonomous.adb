@@ -91,7 +91,7 @@ is
 
          exit when This.User_Exit;
 
-         Next_Mast_Pos (This, -45, 45, Milliseconds (10));
+         Next_Mast_Pos (This, -55, 55, Milliseconds (10));
 
          Distance := Sonar_Distance;
 
