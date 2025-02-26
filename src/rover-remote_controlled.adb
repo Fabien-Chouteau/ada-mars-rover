@@ -15,6 +15,19 @@ is
                            Back_Left,
                            Back_Right);
 
+   function Img (Cmd : Remote_Command) return String
+   is (case Cmd is
+          when None          => "None",
+          when Forward       => "Forward",
+          when Backward      => "Backward",
+          when Turn_Left     => "Turn Left",
+          when Turn_Right    => "Turn Right",
+          when Forward_Left  => "Fwd Left",
+          when Forward_Right => "Fwd Right",
+          when Back_Left     => "Bwd Left",
+          when Back_Right    => "Bwd Right")
+        with Post => Img'Result'Length <= 13;
+
    ----------------
    -- To_Command --
    ----------------
@@ -82,6 +95,8 @@ is
          end if;
 
          Cmd := To_Command (Buttons);
+
+         Set_Display_Info ("Remote: " & Img (Cmd));
 
          if Cmd /= Last_Cmd then
 

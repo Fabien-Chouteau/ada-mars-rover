@@ -134,6 +134,43 @@ package body Rover_HAL.GUI is
       return FRD'Img & FLD'Img & BRD'Img & BLD'Img;
    end RAM_Vs_Flash;
 
+   ------------------
+   -- Remote_Debug --
+   ------------------
+
+   function Remote_Debug return String is
+      use HAL;
+      Res : String (1 .. Last_Remote_Packet'Length * 2);
+      Idx : Natural := Res'First;
+
+      function To_Hex (B : HAL.UInt4) return Character
+      is (case B is
+             when 0 => '0',
+             when 1 => '1',
+             when 2 => '2',
+             when 3 => '3',
+             when 4 => '4',
+             when 5 => '5',
+             when 6 => '6',
+             when 7 => '7',
+             when 8 => '8',
+             when 9 => '9',
+             when 10 => 'A',
+             when 11 => 'B',
+             when 12 => 'C',
+             when 13 => 'D',
+             when 14 => 'E',
+             when 15 => 'F');
+   begin
+      for Elt of Last_Remote_Packet loop
+         Res (Idx) := To_Hex (HAL.UInt4 (Elt / 2**4));
+         Res (Idx + 1) := To_Hex (HAL.UInt4 (Elt and 2#1111#));
+         Idx := @ + 1;
+      end loop;
+
+      return Res;
+   end Remote_Debug;
+
    ------------
    -- Update --
    ------------
@@ -229,7 +266,7 @@ package body Rover_HAL.GUI is
 
          Screen.Print
            (0, Line2, (case Menu is
-               when Sonar => "",
+               when Sonar => Display_Info,
                when Edit_FR => "Current:" & Center (Front, Right)'Img,
                when Edit_FL => "Current:" & Center (Front, Left)'Img,
                when Edit_BR => "Current:" & Center (Back, Right)'Img,
@@ -244,7 +281,7 @@ package body Rover_HAL.GUI is
                             In_Flash_Data.BL'Img));
 
          Screen.Print (0, Line3, (case Menu is
-                          when Sonar => "",
+                          when Sonar => Remote_Debug,
                           when Edit_FR => "Saved:" & In_Flash_Data.FR'Img,
                           when Edit_FL => "Saved:" & In_Flash_Data.FL'Img,
                           when Edit_BR => "Saved:" & In_Flash_Data.BR'Img,

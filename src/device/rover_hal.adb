@@ -217,4 +217,22 @@ is
                         Pwr  : Motor_Power)
                         renames Rover_HAL.Motors.Set_Power;
 
+   ----------------------
+   -- Set_Display_Info --
+   ----------------------
+
+   procedure Set_Display_Info (Str : String) is
+      use GUI;
+
+      Len : constant Natural := Natural'Min (Str'Length, Display_Info'Length);
+      Last : constant Natural := Display_Info'First + Len - 1;
+   begin
+      Display_Info (Display_Info'First .. Last)
+        := Str (Str'First .. Str'First + Len - 1);
+
+      if Len < Display_Info'Length then
+         Display_Info (Last + 1 .. Display_Info'Last) := [others => ' '];
+      end if;
+   end Set_Display_Info;
+
 end Rover_HAL;

@@ -2,6 +2,7 @@ with HAL; use HAL;
 with RP.GPIO; use RP.GPIO;
 with Pico;
 with RP.Timer;
+with Rover_HAL.GUI;
 
 package body Rover_HAL.Remote is
 
@@ -167,6 +168,7 @@ package body Rover_HAL.Remote is
          Result (Start) := True;
       end if;
 
+      GUI.Last_Remote_Packet := Data;
       return Result;
    end Update;
 

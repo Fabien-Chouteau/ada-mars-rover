@@ -194,12 +194,15 @@ is
       State : Auto_State;
    begin
 
+      Set_Display_Info ("Autonomous");
+
       --  Stop everything
       Set_Turn (Straight);
       Set_Power (Left, 0);
       Set_Power (Right, 0);
 
       while not State.User_Exit loop
+
          Go_Forward (State);
          Find_New_Direction (State);
 

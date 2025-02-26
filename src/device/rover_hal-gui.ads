@@ -1,3 +1,4 @@
+with HAL;
 with Rover_HAL.PCA9685;
 
 private package Rover_HAL.GUI is
@@ -11,6 +12,11 @@ private package Rover_HAL.GUI is
 
    Last_Distance : Unsigned_32 := 0
      with Atomic;
+
+   Last_Remote_Packet : HAL.UInt8_Array (1 .. 5) := [others => 0];
+
+   Display_Info : String (1 .. Display_Text_Length) :=
+     [others => ' '];
 
    procedure Initialize;
    procedure Update;

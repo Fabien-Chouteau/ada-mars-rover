@@ -178,4 +178,13 @@ is
        Import;
    --  Return the value set in the last call to `Set_Power`.
 
+   -------------
+   -- Display --
+   -------------
+
+   Display_Text_Length : constant := 128 / 7;
+
+   procedure Set_Display_Info (Str : String)
+     with Pre => Str'Length <= Display_Text_Length;
+
 end Rover_HAL;
