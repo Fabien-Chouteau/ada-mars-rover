@@ -1,20 +1,38 @@
+with HAL; use HAL;
+
 with RP.Clock;
 with RP.Device;
 with RP.GPIO;
 with Pico;
 with RP.Timer;
 
+with Cortex_M.Systick;
+
 with Rover_HAL.I2C;
 with Rover_HAL.PCA9685;
 with Rover_HAL.Motors;
 with Rover_HAL.Sonar;
 with Rover_HAL.Remote;
+with Rover_HAL.Screen;
+with Rover_HAL.GUI;
 
 package body Rover_HAL
 with SPARK_Mode => Off
 is
 
    HW_Initialized : Boolean := False;
+
+   procedure Systick;
+   pragma Export (ASM, Systick, "isr_systick");
+
+   -------------
+   -- Systick --
+   -------------
+
+   procedure Systick is
+   begin
+      GUI.Update;
+   end Systick;
 
    -----------------
    -- Initialized --
@@ -40,6 +58,16 @@ is
       Rover_HAL.PCA9685.Initialize;
       Rover_HAL.Motors.Initialize;
       Rover_HAL.Remote.Initialize;
+      Rover_HAL.Screen.Initialize;
+      Rover_HAL.GUI.Initialize;
+
+      --  15Hz tick
+      Cortex_M.Systick.Configure
+        (Cortex_M.Systick.CPU_Clock,
+         Generate_Interrupt => True,
+         Reload_Value       =>
+           UInt24 ((RP.Clock.Frequency (RP.Clock.SYS) / 15) - 1));
+      Cortex_M.Systick.Enable;
 
       HW_Initialized := True;
    end Initialize;
@@ -74,8 +102,10 @@ is
    -----------
 
    function Sonar_Distance return Unsigned_32 is
+      Result : constant Unsigned_32 := Unsigned_32 (Rover_HAL.Sonar.Distance);
    begin
-      return Unsigned_32 (Rover_HAL.Sonar.Distance);
+      GUI.Last_Distance := Result;
+      return Result;
    end Sonar_Distance;
 
    ----------
@@ -115,15 +145,9 @@ is
 
       Move_Step  : constant := 200.0 / 90.0;
 
-      Center : constant array (Steering_Wheel_Id, Side_Id) of PWM_Range :=
-        [Front => [Left =>  300 - 20,
-                   Right => 300 - 15],
-         Back  => [Left =>  300 - 20,
-                   Right => 300 + 00]];
-
       Offset : constant Integer := Integer (-Float (V) * Move_Step);
       Pos : constant PWM_Range :=
-        PWM_Range (Integer (Center (Wheel, Side)) + Offset);
+        PWM_Range (Integer (GUI.Center (Wheel, Side)) + Offset);
 
       Chan : constant Channel_Id :=
         (case Side is

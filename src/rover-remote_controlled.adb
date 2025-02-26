@@ -65,7 +65,7 @@ is
       loop
          Now := Clock;
 
-         exit when Last_Interaction_Time + Timeout > Now;
+         exit when Last_Interaction_Time + Timeout < Now;
 
          Buttons  := Update;
          Last_Cmd := Cmd;
