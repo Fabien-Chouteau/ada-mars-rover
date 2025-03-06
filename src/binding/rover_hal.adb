@@ -70,10 +70,10 @@ is
    ----------
 
    procedure Set_Mast_Angle (V : Mast_Angle) is
-      procedure Set_Mast_Angle_Inport (V : Integer_8);
-      pragma Import (C, Set_Mast_Angle_Inport, "mars_rover_set_mast_angle");
+      procedure Set_Mast_Angle_Import (V : Integer_8);
+      pragma Import (C, Set_Mast_Angle_Import, "mars_rover_set_mast_angle");
    begin
-      Set_Mast_Angle_Inport (Integer_8 (V));
+      Set_Mast_Angle_Import (Integer_8 (V));
    end Set_Mast_Angle;
 
    ------------
@@ -81,8 +81,17 @@ is
    ------------
 
    function Update return Buttons_State is
+      function Controller_State_Import return Unsigned_16;
+      pragma Import (C, Controller_State_Import,
+                     "mars_rover_controller_state");
+
+      Raw : constant Unsigned_16 := Controller_State_Import;
+      Result : Buttons_State;
    begin
-      return [others => False];
+      for B in Buttons loop
+         Result (B) := (Raw and Unsigned_16 (2**Buttons'Pos (B))) /= 0;
+      end loop;
+      return Result;
    end Update;
 
    ------------
