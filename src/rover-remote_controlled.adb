@@ -129,13 +129,13 @@ is
                Set_Power (Left, 100);
                Set_Power (Right, 50);
             when Back_Left =>
-               Set_Turn (Right);
-               Set_Power (Left, -100);
-               Set_Power (Right, -50);
-            when Back_Right =>
                Set_Turn (Left);
                Set_Power (Left, -50);
                Set_Power (Right, -100);
+            when Back_Right =>
+               Set_Turn (Right);
+               Set_Power (Left, -100);
+               Set_Power (Right, -50);
             when others =>
                Set_Power (Left, 0);
                Set_Power (Right, 0);
