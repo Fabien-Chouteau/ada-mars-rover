@@ -75,7 +75,7 @@ is
    -- Mast --
    ----------
 
-   type Mast_Angle is new  Interfaces.Integer_8 range -55 .. 55;
+   type Mast_Angle is new  Interfaces.Integer_8 range -70 .. 70;
 
    procedure Set_Mast_Angle (V : Mast_Angle)
      with
