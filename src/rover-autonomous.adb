@@ -1,56 +1,17 @@
 with Interfaces; use Interfaces;
 with Rover_HAL; use Rover_HAL;
 
+with Rover.Mast_Control;
+
 package body Rover.Autonomous
 with SPARK_Mode
 is
 
-   type Mast_Direction is (Left, None, Right);
-
    type Auto_State is record
       User_Exit : Boolean := False;
-      Pos : Mast_Angle := 0;
-      Direction : Mast_Direction := Left;
-      Last_Mast_Update : Time := 0;
+
+      Mast : Rover.Mast_Control.Mast_State;
    end record;
-
-   -------------------
-   -- Next_Mast_Pos --
-   -------------------
-
-   procedure Next_Mast_Pos (This : in out Auto_State;
-                            Min, Max : Mast_Angle;
-                            Period : Time)
-   with
-     Pre  => Initialized,
-     Post => Initialized
-   is
-      Now : constant Time := Clock;
-   begin
-      if Now < This.Last_Mast_Update + Period then
-         return;
-      end if;
-
-      case This.Direction is
-         when None =>
-            null;
-         when Left =>
-            if This.Pos <= Min then
-               This.Direction := Right;
-            else
-               This.Pos := This.Pos - 1;
-            end if;
-         when Right =>
-            if This.Pos >= Max then
-               This.Direction := Left;
-            else
-               This.Pos := This.Pos + 1;
-            end if;
-      end case;
-
-      Set_Mast_Angle (This.Pos);
-      This.Last_Mast_Update := Now;
-   end Next_Mast_Pos;
 
    ----------------------
    -- Check_User_Input --
@@ -91,13 +52,13 @@ is
 
          exit when This.User_Exit;
 
-         Next_Mast_Pos (This, -55, 55, Milliseconds (10));
+         Mast_Control.Next_Mast_Angle (This.Mast, -60, 70, 16);
 
          Distance := Sonar_Distance;
 
-         exit when Distance < 30;
+         exit when Distance < 40;
 
-         Delay_Milliseconds (10);
+         Delay_Milliseconds (40);
       end loop;
    end Go_Forward;
 
@@ -138,7 +99,7 @@ is
 
    begin
       Now := Clock;
-      Timeout := Now + Milliseconds (8000);
+      Timeout := Now + Milliseconds (10000);
 
       Set_Turn (Straight);
       Set_Power (Left, 0);
@@ -152,16 +113,16 @@ is
 
          exit when This.User_Exit or else Now > Timeout;
 
-         Next_Mast_Pos (This, -55, 55, Milliseconds (20));
+         Mast_Control.Next_Mast_Angle (This.Mast, -60, 70, 4);
 
-         if This.Pos <= -40 then
+         if Mast_Control.Last_Angle (This.Mast) <= -40 then
             Left_Dist := Sonar_Distance;
          end if;
-         if This.Pos >= 40 then
+         if Mast_Control.Last_Angle (This.Mast) >= 40 then
             Right_Dist := Sonar_Distance;
          end if;
 
-         Delay_Milliseconds (10);
+         Delay_Milliseconds (30);
       end loop;
 
       if Now > Timeout then

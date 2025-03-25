@@ -1,10 +1,11 @@
 with Interfaces; use Interfaces;
 with Rover_HAL; use Rover_HAL;
 
+with Rover.Mast_Control;
+
 package body Rover.Remote_Controlled
 with SPARK_Mode
 is
-
    type Remote_Command is (Invalid,
                            None,
                            Forward,
@@ -72,6 +73,8 @@ is
       Now : Time;
       Last_Interaction_Time : Time;
       Timeout : constant Time := Milliseconds (10_000);
+
+      M_State : Mast_Control.Mast_State;
    begin
 
       Set_Mast_Angle (0);
@@ -86,7 +89,7 @@ is
          Buttons  := Update;
          Last_Cmd := Cmd;
 
-         Dist                      := Sonar_Distance;
+         Dist := Sonar_Distance;
 
          if (for some B of Buttons => B) then
             Last_Interaction_Time := Clock;
@@ -95,6 +98,14 @@ is
          if Dist < Rover.Safety_Distance then
             --  Ignore forward commands when close to an obstacle
             Buttons (Up) := False;
+         else
+
+            --  Only turn the mast when there is no detected obstacle.
+            --  Otherwise, the sensor may look away from the obstacle and
+            --  not detect it anymore.
+            Mast_Control.Next_Mast_Angle (M_State, -55, 55, 16);
+
+            pragma Assert (Mast_Control.Last_Angle (M_State) in -55 .. 55);
          end if;
 
          Cmd := To_Command (Buttons);
