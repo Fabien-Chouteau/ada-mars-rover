@@ -16,6 +16,8 @@ package body Rover_HAL.Sonar is
       IE : Atomic.Critical_Section.Interrupt_State;
       T1, T2, T3, Tick : Time;
    begin
+      Atomic.Critical_Section.Enter (IE);
+
       Configure (Pin, Output, Floating);
       Set (Pin);
       Rover_HAL.Delay_Microseconds (10);
@@ -23,9 +25,7 @@ package body Rover_HAL.Sonar is
 
       Configure (Pin, Input, Floating);
 
-      Atomic.Critical_Section.Enter (IE);
-
-      T1 := Rover_HAL.Clock;
+      T1 := Clock;
 
       while not Set (Pin) loop
          Tick := Clock;
@@ -45,7 +45,11 @@ package body Rover_HAL.Sonar is
 
       Atomic.Critical_Section.Leave (IE);
 
-      return Natural (T3 - T2);
+      if T3 <= T2 then
+         return 0;
+      else
+         return Natural (T3 - T2);
+      end if;
    end One_Shot;
 
    --------------
